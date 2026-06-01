@@ -74,6 +74,8 @@ filing-resolver resolve --ticker TOYO --intent quarterly --no-include-exhibits -
 filing-resolver resolve --ticker TOYO --intent specific_form --form 6-K --out artifacts/toyo
 ```
 
+**Note:** v0.1.0 supports `--period latest` only. Specific year/quarter/date selection is planned for v0.2.0.
+
 Both CLI entry points work:
 
 ```bash

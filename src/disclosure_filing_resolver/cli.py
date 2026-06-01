@@ -9,16 +9,23 @@ from rich.console import Console
 
 from disclosure_filing_resolver.resolver import resolve_filing_package
 
+# Two-level app: "filing-resolver resolve --ticker TOYO"
 app = typer.Typer(
     name="filing-resolver",
     help="Deterministic SEC filing acquisition and exhibit classification.",
     no_args_is_help=True,
+    invoke_without_command=True,
 )
 console = Console()
 
 
-@app.command()
-def resolve(
+@app.callback(invoke_without_command=True)
+def main_callback() -> None:
+    """Deterministic SEC filing acquisition and exhibit classification."""
+
+
+@app.command(name="resolve")
+def resolve_cmd(
     ticker: str | None = typer.Option(None, "--ticker", "-t", help="Stock ticker symbol"),
     company: str | None = typer.Option(None, "--company", "-c", help="Company name"),
     cik: str | None = typer.Option(None, "--cik", help="SEC CIK number"),
@@ -92,9 +99,13 @@ def _print_summary(package: object) -> None:
     )
 
     if package.documents:
-        downloaded = sum(1 for d in package.documents if d.local_path)
+        downloaded = sum(1 for d in package.documents if d.download_status == "downloaded")
+        failed = sum(1 for d in package.documents if d.download_status == "failed")
         total = len(package.documents)
-        console.print(f"[green]Documents:[/green] {total} total, {downloaded} downloaded")
+        status_parts = [f"{total} total", f"{downloaded} downloaded"]
+        if failed:
+            status_parts.append(f"{failed} failed")
+        console.print(f"[green]Documents:[/green] {', '.join(status_parts)}")
 
     if package.request.out_dir:
         console.print(f"[green]Output:[/green] {package.request.out_dir}")
@@ -108,6 +119,15 @@ def _print_summary(package: object) -> None:
         for doc in sorted(useful, key=lambda d: -d.priority):
             path = doc.local_path or doc.sec_url
             console.print(f"  - {doc.role}: {path}")
+
+    # Failed downloads
+    failed_docs = [d for d in package.documents if d.download_status == "failed"]
+    if failed_docs:
+        console.print()
+        console.print("[red]Failed downloads:[/red]")
+        for doc in failed_docs:
+            error = doc.download_error or "unknown error"
+            console.print(f"  - {doc.role}: {doc.sec_url} — {error}")
 
     # Warnings
     if package.warnings:

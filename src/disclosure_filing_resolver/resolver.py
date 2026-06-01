@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from disclosure_filing_resolver.config import SECConfig, get_sec_config
-from disclosure_filing_resolver.exceptions import UnsupportedMarketError
+from disclosure_filing_resolver.exceptions import UnsupportedMarketError, UnsupportedPeriodError
 from disclosure_filing_resolver.manifest import write_manifest
 from disclosure_filing_resolver.models import (
     FilingPackage,
@@ -56,6 +56,9 @@ def resolve_filing_package(
     if market != "us":
         raise UnsupportedMarketError(market)
 
+    if period != "latest":
+        raise UnsupportedPeriodError(period)
+
     request = ResolveRequest(
         ticker=ticker,
         company_name=company_name,
@@ -105,8 +108,34 @@ def resolve_filing_package(
         # 6. Download if requested
         if download and out_dir:
             documents = provider.download_documents(documents, out_dir, filing, company)
+        else:
+            # Mark all documents as skipped when not downloading
+            for doc in documents:
+                if doc.download_status is None:
+                    doc.download_status = "skipped"
 
-        # 7. Build package
+        # 7. Add warnings for failed downloads
+        failed = [d for d in documents if d.download_status == "failed"]
+        if failed:
+            warnings.append(
+                f"{len(failed)} document(s) failed to download. "
+                "See manifest document download_error fields."
+            )
+            # Stronger warning for important document types
+            important_roles = {
+                "financial_statements",
+                "annual_report",
+                "quarterly_report",
+                "operating_review",
+            }
+            for doc in failed:
+                if doc.role in important_roles:
+                    warnings.append(
+                        f"Important analysis document failed to download: "
+                        f"{doc.role} ({doc.filename})"
+                    )
+
+        # 8. Build package
         package = FilingPackage(
             request=request,
             company=company,

@@ -35,14 +35,14 @@ class TestAnnualSelection:
         assert result.filing_date == "2026-01-25"
         assert "10-K" in result.reasons[0]
 
-    def test_csiq_falls_back_to_10k(self):
+    def test_csiq_selects_20f_annual(self):
+        """CSIQ is a foreign private issuer; annual intent selects 20-F."""
         client = _mock_client("csiq_submissions_sample.json")
         request = ResolveRequest(ticker="CSIQ", intent="annual")
-        result = select_filing(client, "1823486", "0001823486", request)
+        result = select_filing(client, "1375877", "0001375877", request)
 
-        # CSIQ has a 10-K at index 3
-        assert result.form == "10-K"
-        assert result.filing_date == "2025-03-01"
+        assert result.form == "20-F"
+        assert result.filing_date == "2025-04-30"
 
 
 class TestQuarterlySelection:
@@ -62,15 +62,17 @@ class TestQuarterlySelection:
         assert result.form == "6-K"
         assert result.filing_date == "2026-05-18"
 
-    def test_csiq_prefers_10q_when_available(self):
-        """CSIQ has both 10-Q and 6-K; quarterly intent prefers 10-Q."""
+    def test_csiq_quarterly_selects_6k(self):
+        """CSIQ is a foreign private issuer; quarterly intent selects 6-K."""
         client = _mock_client("csiq_submissions_sample.json")
         request = ResolveRequest(ticker="CSIQ", intent="quarterly")
-        result = select_filing(client, "1823486", "0001823486", request)
+        result = select_filing(client, "1375877", "0001375877", request)
 
-        # 10-Q is prioritized over 6-K for quarterly intent
-        assert result.form == "10-Q"
-        assert result.filing_date == "2025-08-10"
+        assert result.form == "6-K"
+        assert result.filing_date == "2026-05-14"
+        # Should mention foreign private issuer context
+        reasons_text = " ".join(result.reasons)
+        assert "6-K" in reasons_text or "Foreign" in reasons_text
 
 
 class TestSemiannualSelection:

@@ -18,11 +18,16 @@ class TestParseFilingIndex:
         assert docs[1].filename == "ea029059301ex99-1.htm"
 
     def test_parse_csiq_index(self):
+        """CSIQ 6-K filing index with Exhibit 99.x documents."""
         html = (FIXTURES / "csiq_filing_index_sample.html").read_text()
-        docs = parse_filing_index(html, "1823486", "0001823486-26-000123")
+        docs = parse_filing_index(html, "1375877", "0001104659-26-060672")
 
-        assert len(docs) == 3
-        assert docs[0].filename == "ea0291000-6k_csiq.htm"
+        assert len(docs) == 4
+        assert docs[0].filename == "tm2614624d1_6k.htm"
+        assert docs[1].filename == "tm2614624d1ex99-1.htm"
+        # Verify SEC URLs use correct CIK
+        for doc in docs:
+            assert "sec.gov/Archives/edgar/data/1375877" in doc.sec_url
 
     def test_urls_are_correct(self):
         html = (FIXTURES / "toyo_filing_index_sample.html").read_text()
