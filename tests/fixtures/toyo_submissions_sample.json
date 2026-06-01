@@ -1,0 +1,37 @@
+{
+  "filings": {
+    "recent": {
+      "accessionNumber": [
+        "0001213900-26-058577",
+        "0001213900-25-123456",
+        "0001213900-25-098765"
+      ],
+      "filingDate": [
+        "2026-05-18",
+        "2025-11-20",
+        "2025-08-15"
+      ],
+      "reportDate": [
+        "2026-03-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "primaryDocument": [
+        "ea0290593-6k_toyo.htm",
+        "ea0250123-6k_toyo.htm",
+        "ea0210456-6k_toyo.htm"
+      ],
+      "primaryDocDescription": [
+        "6-K quarterly financial results",
+        "6-K interim financial statements",
+        "6-K semiannual results"
+      ],
+      "form": [
+        "6-K",
+        "6-K",
+        "6-K"
+      ]
+    },
+    "files": []
+  }
+}

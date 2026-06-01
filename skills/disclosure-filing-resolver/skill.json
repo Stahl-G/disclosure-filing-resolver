@@ -1,0 +1,16 @@
+{
+  "name": "disclosure-filing-resolver",
+  "description": "Deterministic SEC filing acquisition and exhibit classification for AI agent workflows",
+  "version": "0.1.0",
+  "triggers": [
+    "download sec filing",
+    "find sec filing",
+    "download quarterly report",
+    "download annual report",
+    "resolve filing",
+    "get 10-k",
+    "get 10-q",
+    "get 6-k",
+    "get 20-f"
+  ]
+}

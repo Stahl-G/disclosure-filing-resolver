@@ -1,0 +1,43 @@
+{
+  "filings": {
+    "recent": {
+      "accessionNumber": [
+        "0001823486-26-000123",
+        "0001823486-25-000456",
+        "0001823486-25-000789",
+        "0001823486-24-000321"
+      ],
+      "filingDate": [
+        "2026-05-20",
+        "2025-11-15",
+        "2025-08-10",
+        "2025-03-01"
+      ],
+      "reportDate": [
+        "2026-03-31",
+        "2025-09-30",
+        "2025-06-30",
+        "2024-12-31"
+      ],
+      "primaryDocument": [
+        "ea0291000-6k_csiq.htm",
+        "ea0251000-6k_csiq.htm",
+        "ea0211000-10q_csiq.htm",
+        "ea0171000-10k_csiq.htm"
+      ],
+      "primaryDocDescription": [
+        "6-K quarterly financial results",
+        "6-K interim financial statements",
+        "10-Q quarterly report",
+        "10-K annual report"
+      ],
+      "form": [
+        "6-K",
+        "6-K",
+        "10-Q",
+        "10-K"
+      ]
+    },
+    "files": []
+  }
+}

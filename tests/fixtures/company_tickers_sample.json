@@ -1,0 +1,17 @@
+{
+  "1": {
+    "cik_str": 1985273,
+    "ticker": "TOYO",
+    "title": "TOYO Co., Ltd"
+  },
+  "2": {
+    "cik_str": 1823486,
+    "ticker": "CSIQ",
+    "title": "Canadian Solar Inc."
+  },
+  "3": {
+    "cik_str": 1318605,
+    "ticker": "TSLA",
+    "title": "Tesla, Inc."
+  }
+}
