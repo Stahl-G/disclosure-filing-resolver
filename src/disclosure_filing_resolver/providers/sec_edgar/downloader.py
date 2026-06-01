@@ -73,8 +73,11 @@ def download_documents(
         try:
             client.download(doc.sec_url, local_path)
             doc.local_path = str(local_path)
-        except Exception:
+            doc.download_status = "downloaded"
+        except Exception as exc:
             # Don't fail the whole package for one document
             doc.local_path = None
+            doc.download_status = "failed"
+            doc.download_error = str(exc)[:200]
 
     return documents

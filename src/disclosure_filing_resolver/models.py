@@ -80,6 +80,8 @@ class FilingDocument(BaseModel):
     local_path: str | None = None
     file_format: str = "html"
     confidence: float = 0.5
+    download_status: str | None = None  # "downloaded", "failed", "skipped"
+    download_error: str | None = None
 
 
 class FilingPackage(BaseModel):

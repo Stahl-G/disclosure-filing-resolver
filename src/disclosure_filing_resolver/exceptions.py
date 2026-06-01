@@ -86,3 +86,15 @@ class UnsupportedMarketError(ResolverError):
             f"Market '{market}' is not supported in v0.1.0. "
             "Supported markets: us (SEC EDGAR)."
         )
+
+
+class UnsupportedPeriodError(ResolverError):
+    """The requested period is not supported in this version."""
+
+    def __init__(self, period: str) -> None:
+        self.period = period
+        super().__init__(
+            f"v0.1.0 currently supports only --period latest. "
+            f"Received: {period}. "
+            "Specific period filtering is planned for v0.2.0."
+        )
