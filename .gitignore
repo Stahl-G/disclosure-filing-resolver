@@ -36,3 +36,4 @@ artifacts/
 *.log
 .env
 .env.*
+.codegraph/

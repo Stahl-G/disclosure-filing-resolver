@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import List
 
 from disclosure_filing_resolver.models import FilingDocument
 from disclosure_filing_resolver.providers.sec_edgar.client import SECEdgarClient
@@ -53,12 +54,12 @@ def _make_local_name(
 
 def download_documents(
     client: SECEdgarClient,
-    documents: list[FilingDocument],
+    documents: List[FilingDocument],
     out_dir: str,
     company_ticker: str,
     filing_date: str,
     form: str,
-) -> list[FilingDocument]:
+) -> List[FilingDocument]:
     """Download documents to local filesystem.
 
     Updates each document's local_path.

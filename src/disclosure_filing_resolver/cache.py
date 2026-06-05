@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Optional
 
 from disclosure_filing_resolver.models import FilingPackage
 
@@ -19,7 +20,7 @@ class FilingCache:
         safe_key = f"{ticker}_{intent}_{period}".replace("/", "_").replace("\\", "_")
         return self.cache_dir / "filings" / safe_key / "manifest.json"
 
-    def get(self, ticker: str, intent: str, period: str) -> FilingPackage | None:
+    def get(self, ticker: str, intent: str, period: str) -> Optional[FilingPackage]:
         """Try to get a cached filing package."""
         path = self._key_path(ticker, intent, period)
         if path.exists():

@@ -1,5 +1,7 @@
 """Agent-friendly exceptions for disclosure-filing-resolver."""
 
+from typing import List, Optional
+
 
 class ResolverError(Exception):
     """Base exception for resolver errors."""
@@ -20,7 +22,7 @@ class CompanyNotFoundError(ResolverError):
 class AmbiguousCompanyError(ResolverError):
     """Multiple companies matched the input."""
 
-    def __init__(self, query: str, candidates: list[str]) -> None:
+    def __init__(self, query: str, candidates: List[str]) -> None:
         self.query = query
         self.candidates = candidates
         super().__init__(
@@ -37,7 +39,7 @@ class FilingNotFoundError(ResolverError):
         self,
         ticker: str,
         intent: str,
-        tried_forms: list[str],
+        tried_forms: List[str],
         period: str = "latest",
     ) -> None:
         self.ticker = ticker
@@ -54,7 +56,7 @@ class FilingNotFoundError(ResolverError):
 class DocumentNotFoundError(ResolverError):
     """A specific document could not be found or downloaded."""
 
-    def __init__(self, document: str, url: str | None = None) -> None:
+    def __init__(self, document: str, url: Optional[str] = None) -> None:
         self.document = document
         self.url = url
         msg = f"Document not found: {document}"
@@ -66,7 +68,7 @@ class DocumentNotFoundError(ResolverError):
 class SECRequestError(ResolverError):
     """An HTTP request to SEC EDGAR failed."""
 
-    def __init__(self, url: str, status: int | None = None, detail: str = "") -> None:
+    def __init__(self, url: str, status: Optional[int] = None, detail: str = "") -> None:
         self.url = url
         self.status = status
         msg = f"SEC request failed for {url}"

@@ -3,11 +3,7 @@
 import json
 from unittest.mock import MagicMock, patch
 
-from typer.testing import CliRunner
-
-from disclosure_filing_resolver.cli import app
-
-runner = CliRunner()
+from disclosure_filing_resolver.cli import run
 
 
 def _make_mock_package():
@@ -52,76 +48,66 @@ class TestCLI:
     @patch("disclosure_filing_resolver.cli.resolve_filing_package")
     def test_resolve_with_ticker(self, mock_resolve):
         mock_resolve.return_value = _make_mock_package()
-        result = runner.invoke(app, ["resolve", "--ticker", "TOYO", "--no-download"])
-        assert result.exit_code == 0
-        assert "TOYO" in result.output
+        assert run(["resolve", "--ticker", "TOYO", "--no-download"]) == 0
 
     @patch("disclosure_filing_resolver.cli.resolve_filing_package")
-    def test_resolve_json_output(self, mock_resolve):
+    def test_resolve_json_output(self, mock_resolve, capsys):
         mock_resolve.return_value = _make_mock_package()
-        result = runner.invoke(
-            app, ["resolve", "--ticker", "TOYO", "--no-download", "--json"]
-        )
-        assert result.exit_code == 0
-        data = json.loads(result.output)
+        assert run(["resolve", "--ticker", "TOYO", "--no-download", "--json"]) == 0
+        data = json.loads(capsys.readouterr().out)
         assert data["company"]["ticker"] == "TOYO"
 
     @patch("disclosure_filing_resolver.cli.resolve_filing_package")
     def test_resolve_no_input_shows_error(self, mock_resolve):
-        result = runner.invoke(app, ["resolve"])
-        assert result.exit_code == 1
+        assert run(["resolve"]) == 1
 
     @patch("disclosure_filing_resolver.cli.resolve_filing_package")
     def test_resolve_with_company(self, mock_resolve):
         mock_resolve.return_value = _make_mock_package()
-        result = runner.invoke(
-            app, ["resolve", "--company", "Tesla", "--no-download"]
-        )
-        assert result.exit_code == 0
+        assert run(["resolve", "--company", "Tesla", "--no-download"]) == 0
 
     @patch("disclosure_filing_resolver.cli.resolve_filing_package")
     def test_resolve_with_cik(self, mock_resolve):
         mock_resolve.return_value = _make_mock_package()
-        result = runner.invoke(
-            app, ["resolve", "--cik", "1985273", "--no-download"]
-        )
-        assert result.exit_code == 0
+        assert run(["resolve", "--cik", "1985273", "--no-download"]) == 0
 
     @patch("disclosure_filing_resolver.cli.resolve_filing_package")
-    def test_resolve_error_handling(self, mock_resolve):
+    def test_resolve_error_handling(self, mock_resolve, capsys):
         from disclosure_filing_resolver.exceptions import CompanyNotFoundError
 
         mock_resolve.side_effect = CompanyNotFoundError("XYZ")
-        result = runner.invoke(app, ["resolve", "--ticker", "XYZ"])
-        assert result.exit_code == 1
-        assert "Error" in result.output
+        assert run(["resolve", "--ticker", "XYZ"]) == 1
+        assert "Error" in capsys.readouterr().err
 
-    def test_help_shows_resolve_command(self):
+    def test_help_shows_resolve_command(self, capsys):
         """filing-resolver --help must list 'resolve' as a command."""
-        result = runner.invoke(app, ["--help"])
-        assert result.exit_code == 0
-        assert "resolve" in result.output.lower()
+        try:
+            run(["--help"])
+        except SystemExit as exc:
+            assert exc.code == 0
+        assert "resolve" in capsys.readouterr().out.lower()
 
-    def test_resolve_help_contains_options(self):
+    def test_resolve_help_contains_options(self, capsys):
         """filing-resolver resolve --help must show all option flags."""
-        result = runner.invoke(app, ["resolve", "--help"])
-        assert result.exit_code == 0
-        assert "--ticker" in result.output
-        assert "--intent" in result.output
-        assert "--period" in result.output
-        assert "--format" in result.output
-        assert "--download" in result.output
-        assert "--out" in result.output
-        assert "--json" in result.output
+        try:
+            run(["resolve", "--help"])
+        except SystemExit as exc:
+            assert exc.code == 0
+        output = capsys.readouterr().out
+        assert "--ticker" in output
+        assert "--intent" in output
+        assert "--period" in output
+        assert "--format" in output
+        assert "--download" in output
+        assert "--out" in output
+        assert "--json" in output
 
     @patch("disclosure_filing_resolver.cli.resolve_filing_package")
-    def test_non_latest_period_is_rejected(self, mock_resolve):
+    def test_non_latest_period_is_rejected(self, mock_resolve, capsys):
         from disclosure_filing_resolver.exceptions import UnsupportedPeriodError
 
         mock_resolve.side_effect = UnsupportedPeriodError("2026Q1")
-        result = runner.invoke(
-            app, ["resolve", "--ticker", "TOYO", "--period", "2026Q1"]
-        )
-        assert result.exit_code == 1
-        assert "Error" in result.output
-        assert "2026Q1" in result.output
+        assert run(["resolve", "--ticker", "TOYO", "--period", "2026Q1"]) == 1
+        output = capsys.readouterr().err
+        assert "Error" in output
+        assert "2026Q1" in output

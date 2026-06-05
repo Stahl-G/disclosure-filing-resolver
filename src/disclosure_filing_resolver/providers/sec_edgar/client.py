@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 
@@ -26,7 +26,7 @@ class SECEdgarClient:
         self._last_request_time: float = 0.0
         self._min_interval = 1.0 / config.rate_limit
         self._cache_dir = Path(config.cache_dir)
-        self._client: httpx.Client | None = None
+        self._client: Optional[httpx.Client] = None
 
     @property
     def client(self) -> httpx.Client:
@@ -52,7 +52,7 @@ class SECEdgarClient:
         Retries on: 408, 429, 500, 502, 503, 504, timeouts, transport errors.
         Does not retry on: 400, 401, 403, 404.
         """
-        last_exc: Exception | None = None
+        last_exc: Optional[Exception] = None
 
         for attempt in range(self.config.max_retries):
             self._rate_limit()
@@ -126,7 +126,7 @@ class SECEdgarClient:
         safe_name = url.replace("https://", "").replace("http://", "").replace("/", "_")
         return self._cache_dir / "sec" / safe_name
 
-    def _get_cached(self, url: str) -> Any | None:
+    def _get_cached(self, url: str) -> Optional[Any]:
         """Try to get cached response."""
         cache_file = self._cache_path(url)
         if cache_file.exists():

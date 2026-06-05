@@ -2,20 +2,22 @@
 
 from __future__ import annotations
 
+from typing import List
+
 from bs4 import BeautifulSoup
 
 from disclosure_filing_resolver.models import FilingDocument
 from disclosure_filing_resolver.providers.sec_edgar.archive import build_archive_url
 
 
-def parse_filing_index(html: str, cik: str, accession: str) -> list[FilingDocument]:
+def parse_filing_index(html: str, cik: str, accession: str) -> List[FilingDocument]:
     """Parse a filing index HTML page to extract document rows.
 
     Looks for the Document Format Files table which contains columns like:
     Document Type, Description, Filename, etc.
     """
     soup = BeautifulSoup(html, "html.parser")
-    documents: list[FilingDocument] = []
+    documents: List[FilingDocument] = []
 
     # Find the table with document format files
     tables = soup.find_all("table")
