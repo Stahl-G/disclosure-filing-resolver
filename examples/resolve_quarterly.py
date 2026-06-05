@@ -1,16 +1,26 @@
-"""Example: Resolve TOYO latest quarterly filing."""
+"""Example: Resolve a company's latest quarterly filing.
+
+Replace YOUR_TICKER with any SEC-listed ticker (e.g. AAPL, MSFT, GOOG).
+"""
+
+import os
+import sys
 
 from disclosure_filing_resolver import resolve_filing_package
 
 
 def main():
+    ticker = os.environ.get("EXAMPLE_TICKER", "AAPL")
+    if len(sys.argv) > 1:
+        ticker = sys.argv[1]
+
     package = resolve_filing_package(
-        ticker="TOYO",
+        ticker=ticker,
         intent="quarterly",
         period="latest",
         file_format="html",
         download=True,
-        out_dir="artifacts/toyo",
+        out_dir=f"artifacts/{ticker.lower()}",
     )
 
     print(f"Company: {package.company.name} (CIK {package.company.cik})")

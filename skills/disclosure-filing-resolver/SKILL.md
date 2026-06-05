@@ -4,9 +4,9 @@ Use this skill when the user asks to find, download, or locate SEC filings for a
 
 ## When to Use
 
-- "Download TOYO latest quarterly report"
-- "Find Tesla 10-K HTML"
-- "Get CSIQ latest filing"
+- "Download the latest quarterly report for AAPL"
+- "Find the 10-K filing for Microsoft"
+- "Get the latest SEC filing for a public company"
 - "Resolve the latest quarterly filing for a public company"
 
 ## How to Use

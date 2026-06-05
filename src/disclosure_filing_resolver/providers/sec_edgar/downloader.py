@@ -28,7 +28,7 @@ def _make_local_name(
 ) -> str:
     """Generate a readable local filename.
 
-    Example: toyo_2026_q1_6k_cover.htm
+    Example: acme_2026_q1_6k_cover.htm
     """
     # Parse year and quarter from filing date
     year = filing_date[:4] if filing_date else "unknown"

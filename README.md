@@ -59,7 +59,7 @@ All v0.2.0 APIs are preserved — zero breaking changes:
 
 - `resolve_filing_package()` still returns `FilingPackage`
 - `CompanyIdentity`, `FilingCandidate`, `FilingDocument` still work
-- `filing-resolver resolve --ticker TOYO` behaves identically
+- `filing-resolver resolve --ticker AAPL` behaves identically
 - Legacy models have `.to_entity_identity()`, `.to_disclosure_record()`, `.to_artifact()` conversion methods
 
 ## Why Deterministic SEC Resolution
@@ -74,7 +74,7 @@ Every URL in the output is a real, verifiable SEC link.
 
 ## Why 6-K Matters
 
-Foreign private issuers (companies like TOYO, CSIQ listed on US exchanges but incorporated outside the US) file quarterly and annual reports under Form 6-K, not 10-Q or 10-K. The 6-K primary document is often just a cover page — the actual financial statements live in Exhibit 99.x files.
+Foreign private issuers (companies listed on US exchanges but incorporated outside the US) file quarterly and annual reports under Form 6-K, not 10-Q or 10-K. The 6-K primary document is often just a cover page — the actual financial statements live in Exhibit 99.x files.
 
 This resolver automatically:
 
@@ -100,30 +100,27 @@ pip install -e ".[dev]"
 # Set your SEC user agent (required for fair access)
 export SEC_USER_AGENT="your_email@example.com disclosure-filing-resolver"
 
-# Resolve latest quarterly filing for TOYO
-filing-resolver resolve --ticker TOYO --intent quarterly --out artifacts/toyo
+# Resolve latest quarterly filing
+filing-resolver resolve --ticker AAPL --intent quarterly --out artifacts/aapl
 
-# Resolve latest annual report for Tesla
-filing-resolver resolve --ticker TSLA --intent annual --out artifacts/tsla
-
-# Resolve latest quarterly for Canadian Solar
-filing-resolver resolve --ticker CSIQ --intent quarterly --out artifacts/csiq
+# Resolve latest annual report
+filing-resolver resolve --ticker MSFT --intent annual --out artifacts/msft
 
 # Get JSON output
-filing-resolver resolve --ticker TOYO --intent quarterly --json
+filing-resolver resolve --ticker AAPL --intent quarterly --json
 
 # Export sources.json for multi-agent-brief-workflow
-filing-resolver resolve --ticker TOYO --intent quarterly --sources-json
+filing-resolver resolve --ticker AAPL --intent quarterly --sources-json
 
 # Download without exhibits
-filing-resolver resolve --ticker TOYO --intent quarterly --no-include-exhibits --out artifacts/toyo
+filing-resolver resolve --ticker AAPL --intent quarterly --no-include-exhibits --out artifacts/aapl
 
 # Find a specific form
-filing-resolver resolve --ticker TOYO --intent specific_form --form 6-K --out artifacts/toyo
+filing-resolver resolve --ticker AAPL --intent specific_form --form 6-K --out artifacts/aapl
 
 # Enrich with XBRL financial facts
-filing-resolver enrich --ticker TOYO
-filing-resolver enrich --ticker TSLA --max-facts 50
+filing-resolver enrich --ticker AAPL
+filing-resolver enrich --ticker MSFT --max-facts 50
 ```
 
 Both CLI entry points work:
@@ -142,13 +139,14 @@ disclosure-filing-resolver resolve ...
 ```python
 from disclosure_filing_resolver import resolve_filing_package
 
+# Replace AAPL with any SEC-listed ticker
 package = resolve_filing_package(
-    ticker="TOYO",
+    ticker="AAPL",
     intent="quarterly",
     period="latest",
     file_format="html",
     download=True,
-    out_dir="artifacts/toyo",
+    out_dir="artifacts/aapl",
 )
 
 print(f"Company: {package.company.name}")
@@ -167,10 +165,10 @@ from disclosure_filing_resolver import resolve_disclosure, evidence_to_sources
 
 # Returns a generic EvidencePackage
 evidence = resolve_disclosure(
-    ticker="TOYO",
+    ticker="AAPL",
     intent="quarterly",
     download=True,
-    out_dir="artifacts/toyo",
+    out_dir="artifacts/aapl",
 )
 
 # Convert to sources.json format for multi-agent-brief-workflow
@@ -185,7 +183,7 @@ for source in sources:
 from disclosure_filing_resolver import resolve_disclosure, create_default_registry
 
 registry = create_default_registry()
-evidence = resolve_disclosure(ticker="TOYO", registry=registry)
+evidence = resolve_disclosure(ticker="AAPL", registry=registry)
 
 # The evidence package includes observations from XBRL enrichment
 for obs in evidence.observations:
@@ -197,12 +195,12 @@ for obs in evidence.observations:
 ```python
 from disclosure_filing_resolver import resolve_filing_package
 
-# Agent receives user request: "Download TOYO latest quarterly report"
+# Agent receives user request: "Download AAPL latest quarterly report"
 package = resolve_filing_package(
-    ticker="TOYO",
+    ticker="AAPL",
     intent="quarterly",
     download=True,
-    out_dir="artifacts/toyo",
+    out_dir="artifacts/aapl",
 )
 
 # Check for failed downloads
@@ -253,8 +251,8 @@ Add to `sources.yaml`:
 filing_resolver:
   enabled: true
   tickers:
-    - TOYO
-    - TSLA
+    - AAPL    # replace with your target company ticker
+    - MSFT
   filing_types:
     - 10-K
     - 10-Q
@@ -277,7 +275,7 @@ multi-agent-brief sources decide --config workspace/config.yaml --merge
 The `--sources-json` flag outputs a `sources.json` file consumable by multi-agent-brief-workflow:
 
 ```bash
-filing-resolver resolve --ticker TOYO --intent quarterly --sources-json
+filing-resolver resolve --ticker AAPL --intent quarterly --sources-json
 ```
 
 This generates `sources.json` with structured entries that can be imported into a multi-agent-brief-workflow workspace.
@@ -289,12 +287,12 @@ The `manifest.json` output contains:
 ```json
 {
   "schema_version": "1.0",
-  "request": { "ticker": "TOYO", "intent": "quarterly", ... },
-  "company": { "name": "TOYO Co., Ltd", "ticker": "TOYO", "cik": "1985273", ... },
+  "request": { "ticker": "ACME", "intent": "quarterly", ... },
+  "company": { "name": "ACME Corp", "ticker": "ACME", "cik": "0000000000", ... },
   "selected_filing": {
-    "form": "6-K",
-    "filing_date": "2026-05-18",
-    "accession_number": "0001213900-26-058577",
+    "form": "10-Q",
+    "filing_date": "2026-05-15",
+    "accession_number": "0000000000-00-000000",
     ...
   },
   "documents": [
@@ -310,7 +308,7 @@ The `manifest.json` output contains:
       "download_error": null
     }
   ],
-  "warnings": ["6-K primary document may be a cover page; use exhibits for analysis."]
+  "warnings": []
 }
 ```
 
@@ -329,9 +327,11 @@ Tested against live SEC EDGAR (2026-06-01):
 
 | Ticker | Intent | Form | Result |
 |---|---|---|---|
-| TSLA | annual | 10-K | ✅ Resolved, downloaded primary HTML |
-| TOYO | quarterly | 6-K | ✅ Resolved, downloaded cover page |
-| CSIQ | quarterly | 6-K | ✅ Resolved, downloaded cover page |
+| (large-cap) | annual | 10-K | ✅ Resolved, downloaded primary HTML |
+| (FPI) | quarterly | 6-K | ✅ Resolved, downloaded cover page |
+| (FPI) | quarterly | 6-K | ✅ Resolved, downloaded cover page |
+
+(FPI = foreign private issuer with 6-K filing)
 
 **Note:** SEC filing index pages were temporarily unavailable during testing, so exhibit expansion returned only the primary document. This is expected SEC infrastructure behavior — the resolver handles it gracefully.
 

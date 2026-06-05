@@ -33,7 +33,7 @@ class TickerResolver:
         """Load company_tickers.json from SEC."""
         if self._tickers is None:
             data = self._client.get_json(self._client.config.tickers_url)
-            # data is keyed by string integer: {"1": {"ticker": "TOYO", ...}, ...}
+            # data is keyed by string integer: {"1": {"ticker": "AAPL", ...}, ...}
             self._tickers = {}
             for _key, entry in data.items():
                 ticker = entry.get("ticker", "")

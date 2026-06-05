@@ -26,7 +26,7 @@ class SECConfig:
             if env_ua:
                 self.user_agent = env_ua
             else:
-                self.user_agent = "disclosure-filing-resolver/0.1.0 (https://github.com/YihongGuo/disclosure-filing-resolver)"
+                self.user_agent = "disclosure-filing-resolver/0.3.0 (https://github.com/Stahl-G/disclosure-filing-resolver)"
                 warnings.warn(
                     "SEC_USER_AGENT not set. Using default user agent. "
                     "Set SEC_USER_AGENT='your_email@example.com disclosure-filing-resolver' "

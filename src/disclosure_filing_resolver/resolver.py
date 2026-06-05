@@ -221,7 +221,7 @@ def resolve_filing_package(
     This is the main Python API entry point.
 
     Args:
-        ticker: Stock ticker symbol (e.g., "TOYO", "CSIQ", "TSLA")
+        ticker: Stock ticker symbol (e.g., "AAPL", "MSFT")
         company_name: Company name for fuzzy matching
         cik: SEC CIK number
         intent: Filing intent (annual, quarterly, semiannual, interim,

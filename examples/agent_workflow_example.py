@@ -2,6 +2,8 @@
 
 This shows how an AI agent would use the resolver to acquire SEC filings
 and pass them to a downstream analysis tool.
+
+Replace the ticker(s) below with any SEC-listed company.
 """
 
 import json
@@ -57,6 +59,7 @@ def agent_workflow(company_query: str, intent: str = "quarterly"):
 
 
 if __name__ == "__main__":
-    agent_workflow("TOYO quarterly", "quarterly")
+    # Replace these with real tickers
+    agent_workflow("AAPL quarterly", "quarterly")
     print()
-    agent_workflow("TSLA annual", "annual")
+    agent_workflow("MSFT annual", "annual")
