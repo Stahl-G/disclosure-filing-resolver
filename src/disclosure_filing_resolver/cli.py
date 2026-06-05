@@ -153,14 +153,13 @@ def _enrich_cmd(args: argparse.Namespace) -> int:
         return 1
 
     try:
-        from disclosure_filing_resolver.providers.sec_edgar.ticker_resolver import TickerResolver
-        from disclosure_filing_resolver.providers.sec_edgar.client import SECEdgarClient
-        from disclosure_filing_resolver.providers.sec_edgar.xbrl import (
-            SECXBRLProvider,
-            fetch_companyfacts,
-            extract_observations,
-        )
         from disclosure_filing_resolver.config import get_sec_config
+        from disclosure_filing_resolver.providers.sec_edgar.client import SECEdgarClient
+        from disclosure_filing_resolver.providers.sec_edgar.ticker_resolver import TickerResolver
+        from disclosure_filing_resolver.providers.sec_edgar.xbrl import (
+            extract_observations,
+            fetch_companyfacts,
+        )
 
         config = get_sec_config()
         client = SECEdgarClient(config)

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from typing import Any, Dict, List, Optional
 
 from disclosure_filing_resolver.config import SECConfig
@@ -14,7 +13,6 @@ from disclosure_filing_resolver.models import (
 )
 from disclosure_filing_resolver.providers.base import EnrichmentProvider
 from disclosure_filing_resolver.providers.sec_edgar.client import SECEdgarClient
-
 
 # Key financial concepts to extract from companyfacts
 # Maps XBRL concept names to human-readable categories

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from disclosure_filing_resolver.providers.sec_edgar.ixbrl_parser import (
     _parse_numeric_value,
     extract_ixbrl_facts,
@@ -63,19 +61,23 @@ SAMPLE_IXBRL_HTML = """
 </xbrli:context>
 
 <p>Revenue:
-<ix:nonFraction name="us-gaap:Revenues" contextRef="ctx1" unitRef="USD" format="ixt:num-dot-decimal" decimals="2">150,000,000</ix:nonFraction>
+<ix:nonFraction name="us-gaap:Revenues" contextRef="ctx1"
+  unitRef="USD">150,000,000</ix:nonFraction>
 </p>
 
 <p>Net Income:
-<ix:nonFraction name="us-gaap:NetIncomeLoss" contextRef="ctx1" unitRef="USD" format="ixt:num-dot-decimal" decimals="2">25,000,000</ix:nonFraction>
+<ix:nonFraction name="us-gaap:NetIncomeLoss" contextRef="ctx1"
+  unitRef="USD">25,000,000</ix:nonFraction>
 </p>
 
 <p>Total Assets:
-<ix:nonFraction name="us-gaap:Assets" contextRef="ctx2" unitRef="USD" format="ixt:num-dot-decimal" decimals="2">500,000,000</ix:nonFraction>
+<ix:nonFraction name="us-gaap:Assets" contextRef="ctx2"
+  unitRef="USD">500,000,000</ix:nonFraction>
 </p>
 
 <p>EPS:
-<ix:nonFraction name="us-gaap:EarningsPerShareBasic" contextRef="ctx1" unitRef="USD/shares" format="ixt:num-dot-decimal" decimals="2">1.25</ix:nonFraction>
+<ix:nonFraction name="us-gaap:EarningsPerShareBasic" contextRef="ctx1"
+  unitRef="USD/shares">1.25</ix:nonFraction>
 </p>
 
 <p>Company Name:

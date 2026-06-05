@@ -5,8 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, List, Optional
 
-from bs4 import BeautifulSoup, Tag
-
+from bs4 import BeautifulSoup
 
 # Common XBRL namespace prefixes
 XBRL_NAMESPACES = {

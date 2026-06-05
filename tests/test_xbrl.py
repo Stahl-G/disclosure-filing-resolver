@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import json
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from disclosure_filing_resolver.models import (
     DisclosureRequest,
@@ -17,9 +14,7 @@ from disclosure_filing_resolver.providers.sec_edgar.xbrl import (
     _extract_latest_fact,
     _pick_preferred_unit,
     extract_observations,
-    fetch_companyfacts,
 )
-
 
 # Sample companyfacts JSON for testing
 SAMPLE_COMPANYFACTS = {
