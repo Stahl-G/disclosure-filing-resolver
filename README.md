@@ -26,6 +26,42 @@ Deterministic SEC filing acquisition and exhibit classification layer for AI age
 - Web scraping or browser automation
 - HKEX, CNINFO, ASX filings
 
+## What's New in v0.3.0
+
+v0.2.0 was a **SEC-only tool** — one hardcoded path from ticker to filing download.
+v0.3.0 is a **pluggable disclosure resolution layer** with provider abstraction, structured data extraction, and agent-workflow integration.
+
+### Architecture shift
+
+```
+v0.2.0:  ticker → SECEdgarProvider → FilingPackage (SEC-specific)
+
+v0.3.0:  ticker → IdentityProvider    → EntityIdentity    (generic entity)
+              → DisclosureProvider   → EvidencePackage   (generic evidence bundle)
+              → EnrichmentProvider   → Observation[]      (structured facts)
+```
+
+### New in v0.3.0
+
+| Feature | Description |
+|---------|-------------|
+| **Generic data models** | `EntityIdentity`, `DisclosureRecord`, `Artifact`, `EvidencePackage`, `Observation` — provider-agnostic |
+| **Provider registry** | `IdentityProvider`, `DisclosureProvider`, `EnrichmentProvider` abstract base classes — register any data source |
+| **`resolve_disclosure()`** | New generic entry point returning `EvidencePackage` |
+| **`sources.json` export** | `--sources-json` CLI flag — output consumable by [multi-agent-brief-workflow](https://github.com/Stahl-G/multi-agent-brief-workflow) |
+| **XBRL enrichment** | `enrich` CLI subcommand — extract revenue, net income, assets, EPS from SEC companyfacts API |
+| **iXBRL parser** | Extract Inline XBRL facts from filing HTML documents |
+| **argparse CLI** | Python 3.9+ compatible (replaces typer dependency) |
+
+### Backward compatibility
+
+All v0.2.0 APIs are preserved — zero breaking changes:
+
+- `resolve_filing_package()` still returns `FilingPackage`
+- `CompanyIdentity`, `FilingCandidate`, `FilingDocument` still work
+- `filing-resolver resolve --ticker TOYO` behaves identically
+- Legacy models have `.to_entity_identity()`, `.to_disclosure_record()`, `.to_artifact()` conversion methods
+
 ## Why Deterministic SEC Resolution
 
 Web search is unreliable for SEC filings. Links break, search results vary, and agents can hallucinate URLs. This project uses SEC EDGAR's deterministic data sources:
