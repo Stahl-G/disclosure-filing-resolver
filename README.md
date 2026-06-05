@@ -217,6 +217,71 @@ manifest_path = f"{package.request.out_dir}/manifest.json"
 # downstream_project.analyze(manifest_path)
 ```
 
+## Multi-Agent Brief Workflow Integration
+
+This project integrates with [multi-agent-brief-workflow](https://github.com/Stahl-G/multi-agent-brief-workflow) as a source provider, enabling SEC filing data to flow directly into audit-ready executive briefs.
+
+### How It Works
+
+```text
+multi-agent-brief sources decide  →  generates filing_sources candidates
+                                    ↓
+source_candidates.yaml            →  user reviews tickers, enables/disables
+                                    ↓
+sources decide --merge            →  enables filing_resolver in sources.yaml
+                                    ↓
+FilingResolverProvider            →  calls resolve_disclosure() per ticker
+                                    ↓
+EvidencePackage → SourceItems     →  enters Scout → Screener → Claim Ledger
+XBRL observations → claims        →  structured financial facts in brief
+```
+
+### What the Integration Provides
+
+| Feature | Description |
+|---------|-------------|
+| SEC filing sources | 10-K, 10-Q, 8-K, 6-K documents automatically fetched as source material |
+| XBRL financial claims | Revenue, net income, assets, EPS extracted as structured Claim Ledger entries |
+| Source traceability | Every claim carries a SEC EDGAR URL for audit |
+| 6-K exhibit expansion | Foreign private issuer filings expanded to include actual financial statements |
+
+### Configuration in multi-agent-brief-workflow
+
+Add to `sources.yaml`:
+
+```yaml
+filing_resolver:
+  enabled: true
+  tickers:
+    - TOYO
+    - TSLA
+  filing_types:
+    - 10-K
+    - 10-Q
+    - 8-K
+  xbrl: true
+```
+
+Or auto-discover via `sources decide`:
+
+```bash
+# Generate candidates (includes SEC filing suggestions)
+multi-agent-brief sources decide --config workspace/config.yaml
+
+# Review and merge
+multi-agent-brief sources decide --config workspace/config.yaml --merge
+```
+
+### CLI Integration
+
+The `--sources-json` flag outputs a `sources.json` file consumable by multi-agent-brief-workflow:
+
+```bash
+filing-resolver resolve --ticker TOYO --intent quarterly --sources-json
+```
+
+This generates `sources.json` with structured entries that can be imported into a multi-agent-brief-workflow workspace.
+
 ## Manifest Schema
 
 The `manifest.json` output contains:
