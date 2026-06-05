@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Dict, List
 
 from disclosure_filing_resolver.providers.sec_edgar.client import SECEdgarClient
 
 
-def get_submissions(client: SECEdgarClient, cik10: str) -> dict[str, Any]:
+def get_submissions(client: SECEdgarClient, cik10: str) -> Dict[str, Any]:
     """Fetch the submissions JSON for a company CIK.
 
     Returns the full submissions data dict.
@@ -16,7 +16,7 @@ def get_submissions(client: SECEdgarClient, cik10: str) -> dict[str, Any]:
     return client.get_json(url, use_cache=True)
 
 
-def get_recent_filings(submissions: dict[str, Any]) -> dict[str, Any]:
+def get_recent_filings(submissions: Dict[str, Any]) -> Dict[str, Any]:
     """Extract the recent filings dict from submissions JSON.
 
     SEC submissions JSON has structure:
@@ -34,12 +34,12 @@ def get_recent_filings(submissions: dict[str, Any]) -> dict[str, Any]:
     return submissions.get("filings", {}).get("recent", {})
 
 
-def get_filing_lists(submissions: dict[str, Any]) -> list[dict[str, Any]]:
+def get_filing_lists(submissions: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Get list of filing chunk file references for older filings."""
     return submissions.get("filings", {}).get("files", [])
 
 
-def get_filings_as_rows(recent: dict[str, Any], num_filings: int) -> list[dict[str, str]]:
+def get_filings_as_rows(recent: Dict[str, Any], num_filings: int) -> List[Dict[str, str]]:
     """Convert the columnar recent filings dict to a list of row dicts.
 
     recent is like:
@@ -60,9 +60,9 @@ def get_filings_as_rows(recent: dict[str, Any], num_filings: int) -> list[dict[s
         return []
 
     n = len(recent[first_key])
-    rows: list[dict[str, str]] = []
+    rows: List[Dict[str, str]] = []
     for i in range(min(n, num_filings)):
-        row: dict[str, str] = {}
+        row: Dict[str, str] = {}
         for key, values in recent.items():
             if isinstance(values, list) and i < len(values):
                 row[key] = str(values[i]) if values[i] is not None else ""

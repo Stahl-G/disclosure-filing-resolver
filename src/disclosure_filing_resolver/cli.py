@@ -2,98 +2,216 @@
 
 from __future__ import annotations
 
+import argparse
 import json
+import sys
+from typing import Any, List, Optional
 
-import typer
-from rich.console import Console
-
-from disclosure_filing_resolver.resolver import resolve_filing_package
-
-# Two-level app: "filing-resolver resolve --ticker TOYO"
-app = typer.Typer(
-    name="filing-resolver",
-    help="Deterministic SEC filing acquisition and exhibit classification.",
-    no_args_is_help=True,
-    invoke_without_command=True,
-)
-console = Console()
+from disclosure_filing_resolver.manifest import evidence_to_sources
+from disclosure_filing_resolver.resolver import resolve_disclosure, resolve_filing_package
 
 
-@app.callback(invoke_without_command=True)
-def main_callback() -> None:
-    """Deterministic SEC filing acquisition and exhibit classification."""
+def build_parser() -> argparse.ArgumentParser:
+    """Build the command-line parser."""
+    parser = argparse.ArgumentParser(
+        prog="filing-resolver",
+        description="Deterministic SEC filing acquisition and exhibit classification.",
+    )
+    subparsers = parser.add_subparsers(dest="command")
 
-
-@app.command(name="resolve")
-def resolve_cmd(
-    ticker: str | None = typer.Option(None, "--ticker", "-t", help="Stock ticker symbol"),
-    company: str | None = typer.Option(None, "--company", "-c", help="Company name"),
-    cik: str | None = typer.Option(None, "--cik", help="SEC CIK number"),
-    intent: str = typer.Option(
-        "quarterly",
+    resolve_parser = subparsers.add_parser(
+        "resolve",
+        help="Resolve a SEC filing and optionally download documents.",
+        description="Resolve a SEC filing and optionally download documents.",
+    )
+    resolve_parser.add_argument("--ticker", "-t", help="Stock ticker symbol")
+    resolve_parser.add_argument("--company", "-c", help="Company name")
+    resolve_parser.add_argument("--cik", help="SEC CIK number")
+    resolve_parser.add_argument(
         "--intent",
         "-i",
+        default="quarterly",
         help="annual, quarterly, semiannual, interim, earnings_release, specific_form",
-    ),
-    period: str = typer.Option(
-        "latest", "--period", "-p", help="Period: latest or specific date"
-    ),
-    form: str | None = typer.Option(
-        None, "--form", "-f", help="Form type for --intent specific_form"
-    ),
-    file_format: str = typer.Option(
-        "html", "--format", help="File format: html, pdf, any"
-    ),
-    download: bool = typer.Option(
-        True, "--download/--no-download", help="Download documents"
-    ),
-    include_exhibits: bool = typer.Option(
-        True, "--include-exhibits/--no-include-exhibits", help="Include exhibits"
-    ),
-    out: str | None = typer.Option(None, "--out", "-o", help="Output directory"),
-    json_output: bool = typer.Option(False, "--json", help="Output manifest JSON to stdout"),
-) -> None:
-    """Resolve a SEC filing and optionally download documents."""
-    if not ticker and not company and not cik:
-        console.print(
-            "[red]Error: Provide at least one of --ticker, --company, or --cik.[/red]"
-        )
-        raise typer.Exit(1)
+    )
+    resolve_parser.add_argument(
+        "--period",
+        "-p",
+        default="latest",
+        help="Period: latest or specific date",
+    )
+    resolve_parser.add_argument(
+        "--form",
+        "-f",
+        help="Form type for --intent specific_form",
+    )
+    resolve_parser.add_argument(
+        "--format",
+        dest="file_format",
+        default="html",
+        help="File format: html, pdf, any",
+    )
+    resolve_parser.add_argument(
+        "--download",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Download documents",
+    )
+    resolve_parser.add_argument(
+        "--include-exhibits",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Include exhibits",
+    )
+    resolve_parser.add_argument("--out", "-o", help="Output directory")
+    resolve_parser.add_argument(
+        "--json",
+        dest="json_output",
+        action="store_true",
+        help="Output manifest JSON to stdout",
+    )
+    resolve_parser.add_argument(
+        "--sources-json",
+        dest="sources_json",
+        action="store_true",
+        help="Output sources.json to stdout (for multi-agent-brief-workflow)",
+    )
+    resolve_parser.set_defaults(func=_resolve_cmd)
+
+    # enrich subcommand
+    enrich_parser = subparsers.add_parser(
+        "enrich",
+        help="Enrich an entity with XBRL financial facts from SEC companyfacts.",
+        description="Enrich an entity with XBRL financial facts from SEC companyfacts.",
+    )
+    enrich_parser.add_argument("--ticker", "-t", help="Stock ticker symbol")
+    enrich_parser.add_argument("--company", "-c", help="Company name")
+    enrich_parser.add_argument("--cik", help="SEC CIK number")
+    enrich_parser.add_argument(
+        "--max-facts",
+        type=int,
+        default=30,
+        help="Maximum number of facts to extract (default: 30)",
+    )
+    enrich_parser.set_defaults(func=_enrich_cmd)
+
+    return parser
+
+
+def _resolve_cmd(args: argparse.Namespace) -> int:
+    """Resolve command implementation."""
+    if not args.ticker and not args.company and not args.cik:
+        print("Error: Provide at least one of --ticker, --company, or --cik.", file=sys.stderr)
+        return 1
 
     try:
+        # Use the generic resolver when sources-json is requested
+        if args.sources_json:
+            evidence = resolve_disclosure(
+                ticker=args.ticker,
+                company_name=args.company,
+                cik=args.cik,
+                intent=args.intent,
+                period=args.period,
+                form=args.form,
+                file_format=args.file_format,
+                download=args.download,
+                include_exhibits=args.include_exhibits,
+                out_dir=args.out,
+            )
+            sources = evidence_to_sources(evidence)
+            print(json.dumps(sources, ensure_ascii=False, indent=2))
+            return 0
+
         package = resolve_filing_package(
-            ticker=ticker,
-            company_name=company,
-            cik=cik,
-            intent=intent,
-            period=period,
-            form=form,
-            file_format=file_format,
-            download=download,
-            include_exhibits=include_exhibits,
-            out_dir=out,
+            ticker=args.ticker,
+            company_name=args.company,
+            cik=args.cik,
+            intent=args.intent,
+            period=args.period,
+            form=args.form,
+            file_format=args.file_format,
+            download=args.download,
+            include_exhibits=args.include_exhibits,
+            out_dir=args.out,
         )
-    except Exception as e:
-        console.print(f"[red]Error: {e}[/red]")
-        raise typer.Exit(1)
+    except Exception as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
 
-    if json_output:
-        console.print(json.dumps(package.model_dump(), ensure_ascii=False, indent=2))
-        return
+    if args.json_output:
+        print(json.dumps(package.model_dump(), ensure_ascii=False, indent=2))
+        return 0
 
-    # Print human-readable summary
     _print_summary(package)
+    return 0
 
 
-def _print_summary(package: object) -> None:
+def _enrich_cmd(args: argparse.Namespace) -> int:
+    """Enrich command implementation."""
+    if not args.ticker and not args.company and not args.cik:
+        print("Error: Provide at least one of --ticker, --company, or --cik.", file=sys.stderr)
+        return 1
+
+    try:
+        from disclosure_filing_resolver.providers.sec_edgar.ticker_resolver import TickerResolver
+        from disclosure_filing_resolver.providers.sec_edgar.client import SECEdgarClient
+        from disclosure_filing_resolver.providers.sec_edgar.xbrl import (
+            SECXBRLProvider,
+            fetch_companyfacts,
+            extract_observations,
+        )
+        from disclosure_filing_resolver.config import get_sec_config
+
+        config = get_sec_config()
+        client = SECEdgarClient(config)
+
+        try:
+            # Resolve company identity
+            from disclosure_filing_resolver.models import ResolveRequest
+            request = ResolveRequest(
+                ticker=args.ticker,
+                company_name=args.company,
+                cik=args.cik,
+            )
+            resolver = TickerResolver(client)
+            company = resolver.resolve(request)
+            cik10 = company.cik10
+
+            # Fetch and extract XBRL facts
+            companyfacts = fetch_companyfacts(client, cik10)
+            observations = extract_observations(companyfacts, max_facts=args.max_facts)
+
+            # Output as JSON
+            result = {
+                "entity": {
+                    "name": company.name,
+                    "ticker": company.ticker,
+                    "cik": company.cik,
+                    "cik10": company.cik10,
+                },
+                "observations": [obs.model_dump() for obs in observations],
+                "count": len(observations),
+            }
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+        finally:
+            client.close()
+
+    except Exception as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
+    return 0
+
+
+def _print_summary(package: Any) -> None:
     """Print a human-readable summary of the resolved package."""
-    console.print()
-    console.print(
-        f"[green]Resolved[/green] {package.company.ticker or package.company.name} "
+    print()
+    print(
+        f"Resolved {package.company.ticker or package.company.name} "
         f"/ CIK {package.company.cik}"
     )
-    console.print(
-        f"[green]Selected filing:[/green] {package.selected_filing.form} "
+    print(
+        f"Selected filing: {package.selected_filing.form} "
         f"filed {package.selected_filing.filing_date}, "
         f"accession {package.selected_filing.accession_number}"
     )
@@ -105,43 +223,50 @@ def _print_summary(package: object) -> None:
         status_parts = [f"{total} total", f"{downloaded} downloaded"]
         if failed:
             status_parts.append(f"{failed} failed")
-        console.print(f"[green]Documents:[/green] {', '.join(status_parts)}")
+        print(f"Documents: {', '.join(status_parts)}")
 
     if package.request.out_dir:
-        console.print(f"[green]Output:[/green] {package.request.out_dir}")
-        console.print(f"[green]Manifest:[/green] {package.request.out_dir}/manifest.json")
+        print(f"Output: {package.request.out_dir}")
+        print(f"Manifest: {package.request.out_dir}/manifest.json")
 
-    # Recommended analysis documents
     useful = [d for d in package.documents if d.role not in ("unknown", "cover")]
     if useful:
-        console.print()
-        console.print("[bold]Recommended analysis documents:[/bold]")
+        print()
+        print("Recommended analysis documents:")
         for doc in sorted(useful, key=lambda d: -d.priority):
             path = doc.local_path or doc.sec_url
-            console.print(f"  - {doc.role}: {path}")
+            print(f"  - {doc.role}: {path}")
 
-    # Failed downloads
     failed_docs = [d for d in package.documents if d.download_status == "failed"]
     if failed_docs:
-        console.print()
-        console.print("[red]Failed downloads:[/red]")
+        print()
+        print("Failed downloads:")
         for doc in failed_docs:
             error = doc.download_error or "unknown error"
-            console.print(f"  - {doc.role}: {doc.sec_url} — {error}")
+            print(f"  - {doc.role}: {doc.sec_url} - {error}")
 
-    # Warnings
     if package.warnings:
-        console.print()
-        console.print("[yellow]Warnings:[/yellow]")
-        for w in package.warnings:
-            console.print(f"  - {w}")
+        print()
+        print("Warnings:")
+        for warning in package.warnings:
+            print(f"  - {warning}")
 
-    console.print()
+    print()
 
 
-def main() -> None:
+def run(argv: Optional[List[str]] = None) -> int:
+    """Run the CLI and return an exit code."""
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if not hasattr(args, "func"):
+        parser.print_help()
+        return 0
+    return args.func(args)
+
+
+def main(argv: Optional[List[str]] = None) -> None:
     """Entry point for both CLI names."""
-    app()
+    raise SystemExit(run(argv))
 
 
 if __name__ == "__main__":

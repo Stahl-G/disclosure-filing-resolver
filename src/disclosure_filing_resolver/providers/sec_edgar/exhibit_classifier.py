@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import re
+from typing import Any, Dict, List
 
 from disclosure_filing_resolver.models import FilingDocument
 
 # Role definitions with keywords and priority
-ROLE_DEFINITIONS: dict[str, dict] = {
+ROLE_DEFINITIONS: Dict[str, Dict[str, Any]] = {
     "financial_statements": {
         "keywords": [
             "unaudited interim consolidated financial statements",
@@ -178,7 +179,7 @@ def classify_document(doc: FilingDocument, is_primary: bool = False) -> FilingDo
     return doc
 
 
-def classify_documents(documents: list[FilingDocument]) -> list[FilingDocument]:
+def classify_documents(documents: List[FilingDocument]) -> List[FilingDocument]:
     """Classify all documents in a filing.
 
     The first document is typically the cover/primary document.

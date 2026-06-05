@@ -2,6 +2,7 @@
 
 from disclosure_filing_resolver import resolve_filing_package
 
+
 def main():
     package = resolve_filing_package(
         ticker="TSLA",

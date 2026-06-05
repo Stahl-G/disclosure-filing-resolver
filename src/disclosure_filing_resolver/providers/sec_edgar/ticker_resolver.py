@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Dict, List, Optional, Tuple, Union
+
 from disclosure_filing_resolver.exceptions import (
     AmbiguousCompanyError,
     CompanyNotFoundError,
@@ -10,12 +12,12 @@ from disclosure_filing_resolver.models import CompanyIdentity, ResolveRequest
 from disclosure_filing_resolver.providers.sec_edgar.client import SECEdgarClient
 
 
-def _pad_cik(cik: int | str) -> str:
+def _pad_cik(cik: Union[int, str]) -> str:
     """Pad CIK to 10 digits with leading zeros."""
     return str(cik).zfill(10)
 
 
-def _strip_cik(cik: int | str) -> str:
+def _strip_cik(cik: Union[int, str]) -> str:
     """Remove leading zeros from CIK for archive URLs."""
     return str(int(cik))
 
@@ -25,9 +27,9 @@ class TickerResolver:
 
     def __init__(self, client: SECEdgarClient) -> None:
         self._client = client
-        self._tickers: dict[str, dict] | None = None
+        self._tickers: Optional[Dict[str, dict]] = None
 
-    def _load_tickers(self) -> dict[str, dict]:
+    def _load_tickers(self) -> Dict[str, dict]:
         """Load company_tickers.json from SEC."""
         if self._tickers is None:
             data = self._client.get_json(self._client.config.tickers_url)
@@ -97,7 +99,7 @@ class TickerResolver:
         """Resolve by company name (case-insensitive substring match)."""
         tickers = self._load_tickers()
         name_upper = name.upper()
-        matches: list[tuple[str, dict]] = []
+        matches: List[Tuple[str, dict]] = []
         for ticker, entry in tickers.items():
             entry_name = entry.get("title", "").upper()
             if name_upper in entry_name or entry_name in name_upper:

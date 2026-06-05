@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Dict, List
+
 from disclosure_filing_resolver.exceptions import FilingNotFoundError
 from disclosure_filing_resolver.models import FilingCandidate, ResolveRequest
 from disclosure_filing_resolver.providers.sec_edgar.archive import (
@@ -15,7 +17,7 @@ from disclosure_filing_resolver.providers.sec_edgar.submissions import (
 )
 
 # Annual form priority (higher = better)
-ANNUAL_FORM_PRIORITY: dict[str, int] = {
+ANNUAL_FORM_PRIORITY: Dict[str, int] = {
     "10-K": 100,
     "20-F": 95,
     "40-F": 90,
@@ -25,7 +27,7 @@ ANNUAL_FORM_PRIORITY: dict[str, int] = {
 }
 
 # Quarterly form priority
-QUARTERLY_FORM_PRIORITY: dict[str, int] = {
+QUARTERLY_FORM_PRIORITY: Dict[str, int] = {
     "10-Q": 100,
     "10-Q/A": 80,
 }
@@ -59,7 +61,7 @@ QUARTERLY_6K_KEYWORDS = [
 ]
 
 
-def _score_text_match(text: str, keywords: list[str]) -> float:
+def _score_text_match(text: str, keywords: List[str]) -> float:
     """Score how well text matches a set of keywords."""
     text_lower = text.lower()
     score = 0.0
@@ -137,7 +139,7 @@ def select_filing(
 
 
 def _make_candidate(
-    row: dict[str, str], cik: str, cik10: str, request: ResolveRequest
+    row: Dict[str, str], cik: str, cik10: str, request: ResolveRequest
 ) -> FilingCandidate:
     """Create a FilingCandidate from a submissions row."""
     accession = row.get("accessionNumber", "")
@@ -155,8 +157,8 @@ def _make_candidate(
 
 
 def _filter_by_form(
-    rows: list[dict[str, str]], form: str, cik: str, cik10: str, request: ResolveRequest
-) -> list[FilingCandidate]:
+    rows: List[Dict[str, str]], form: str, cik: str, cik10: str, request: ResolveRequest
+) -> List[FilingCandidate]:
     """Filter rows by form type (exact match, case-insensitive)."""
     form_upper = form.upper()
     candidates = []
@@ -168,7 +170,7 @@ def _filter_by_form(
 
 
 def _select_annual(
-    rows: list[dict[str, str]], cik: str, cik10: str, request: ResolveRequest
+    rows: List[Dict[str, str]], cik: str, cik10: str, request: ResolveRequest
 ) -> FilingCandidate:
     """Select latest annual filing."""
     tried_forms = []
@@ -192,7 +194,7 @@ def _select_annual(
 
 
 def _select_quarterly(
-    rows: list[dict[str, str]],
+    rows: List[Dict[str, str]],
     cik: str,
     cik10: str,
     request: ResolveRequest,
@@ -235,7 +237,7 @@ def _select_quarterly(
 
 
 def _select_semiannual(
-    rows: list[dict[str, str]],
+    rows: List[Dict[str, str]],
     cik: str,
     cik10: str,
     request: ResolveRequest,

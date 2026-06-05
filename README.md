@@ -11,6 +11,9 @@ Deterministic SEC filing acquisition and exhibit classification layer for AI age
 - Downloads `.htm`/`.html` documents by default
 - Expands and classifies 6-K exhibits (critical for foreign private issuers)
 - Generates a machine-readable `manifest.json` for downstream LLM analysis
+- Exports `sources.json` for integration with [multi-agent-brief-workflow](https://github.com/Stahl-G/multi-agent-brief-workflow)
+- Enriches entities with XBRL financial facts from SEC companyfacts API
+- Parses Inline XBRL (iXBRL) facts from filing HTML documents
 - Retries on transient SEC errors (429, 500, 502, 503, 504) with exponential backoff
 - Tracks download status per document in the manifest
 
@@ -19,7 +22,6 @@ Deterministic SEC filing acquisition and exhibit classification layer for AI age
 - Financial analysis or valuation
 - Legal risk analysis
 - LLM summarization
-- XBRL parsing
 - PDF OCR
 - Web scraping or browser automation
 - HKEX, CNINFO, ASX filings
@@ -74,11 +76,18 @@ filing-resolver resolve --ticker CSIQ --intent quarterly --out artifacts/csiq
 # Get JSON output
 filing-resolver resolve --ticker TOYO --intent quarterly --json
 
+# Export sources.json for multi-agent-brief-workflow
+filing-resolver resolve --ticker TOYO --intent quarterly --sources-json
+
 # Download without exhibits
 filing-resolver resolve --ticker TOYO --intent quarterly --no-include-exhibits --out artifacts/toyo
 
 # Find a specific form
 filing-resolver resolve --ticker TOYO --intent specific_form --form 6-K --out artifacts/toyo
+
+# Enrich with XBRL financial facts
+filing-resolver enrich --ticker TOYO
+filing-resolver enrich --ticker TSLA --max-facts 50
 ```
 
 Both CLI entry points work:
@@ -88,9 +97,11 @@ filing-resolver resolve ...
 disclosure-filing-resolver resolve ...
 ```
 
-**Note:** v0.2.0 supports `--period latest` only. Specific year/quarter/date selection is planned for v0.3.0.
+**Note:** v0.3.0 supports `--period latest` only. Specific year/quarter/date selection is planned for v0.4.0.
 
 ## Python API
+
+### Legacy API (SEC-specific)
 
 ```python
 from disclosure_filing_resolver import resolve_filing_package
@@ -111,6 +122,38 @@ print(f"Documents: {len(package.documents)}")
 for doc in package.documents:
     status = doc.download_status or "unknown"
     print(f"  - {doc.role} [{status}]: {doc.local_path or doc.sec_url}")
+```
+
+### Generic API (provider-agnostic)
+
+```python
+from disclosure_filing_resolver import resolve_disclosure, evidence_to_sources
+
+# Returns a generic EvidencePackage
+evidence = resolve_disclosure(
+    ticker="TOYO",
+    intent="quarterly",
+    download=True,
+    out_dir="artifacts/toyo",
+)
+
+# Convert to sources.json format for multi-agent-brief-workflow
+sources = evidence_to_sources(evidence)
+for source in sources:
+    print(f"{source['title']} — {source['url']}")
+```
+
+### XBRL Enrichment
+
+```python
+from disclosure_filing_resolver import resolve_disclosure, create_default_registry
+
+registry = create_default_registry()
+evidence = resolve_disclosure(ticker="TOYO", registry=registry)
+
+# The evidence package includes observations from XBRL enrichment
+for obs in evidence.observations:
+    print(f"{obs.category}: {obs.value} {obs.unit} ({obs.period})")
 ```
 
 ## Agent Workflow Example
@@ -205,7 +248,7 @@ The client automatically retries on transient errors (429, 500, 502, 503, 504) w
 
 ## Roadmap
 
-### v0.2.0 (current)
+### v0.3.0 (current)
 
 - [x] SEC EDGAR provider with retry/backoff
 - [x] Ticker/CIK/name resolution
@@ -214,17 +257,20 @@ The client automatically retries on transient errors (429, 500, 502, 503, 504) w
 - [x] HTML download with status tracking
 - [x] Manifest generation with download_status fields
 - [x] CLI (`filing-resolver resolve ...`) and Python API
-- [x] Period validation (v0.2.0: `latest` only)
-
-### v0.3.0
-
-- [ ] Optional `fetch` adapter for `sec-filing-legal-decoder`
-- [ ] Period filtering (YYYY, YYYYQ1-Q4, YYYY-MM-DD)
-- [ ] XBRL data extraction
-- [ ] Full-text search within filings
+- [x] Period validation (`latest` only)
+- [x] Generic data models: EntityIdentity, DisclosureRecord, Artifact, EvidencePackage, Observation
+- [x] Provider registry with IdentityProvider, DisclosureProvider, EnrichmentProvider abstractions
+- [x] Generic `resolve_disclosure()` entry point
+- [x] `sources.json` export for multi-agent-brief-workflow integration
+- [x] SEC XBRL enrichment via companyfacts API
+- [x] Inline XBRL (iXBRL) fact extraction from filing HTML
+- [x] argparse CLI (Python 3.9+ compatible)
 
 ### v0.4.0
 
+- [ ] Period filtering (YYYY, YYYYQ1-Q4, YYYY-MM-DD)
+- [ ] Full-text search within filings
+- [ ] Optional `fetch` adapter for `sec-filing-legal-decoder`
 - [ ] HKEX provider
 - [ ] CNINFO provider
 - [ ] PDF OCR fallback

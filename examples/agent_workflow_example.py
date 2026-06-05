@@ -40,7 +40,10 @@ def agent_workflow(company_query: str, intent: str = "quarterly"):
     ]
 
     print(f"Resolved: {manifest['company']['name']}")
-    print(f"Filing: {manifest['selected_filing']['form']} ({manifest['selected_filing']['filing_date']})")
+    print(
+        f"Filing: {manifest['selected_filing']['form']} "
+        f"({manifest['selected_filing']['filing_date']})"
+    )
     print(f"Useful documents for analysis: {len(financial_docs)}")
     for doc in financial_docs:
         print(f"  - {doc['role']}: {doc.get('local_path', doc['sec_url'])}")
